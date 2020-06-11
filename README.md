@@ -1,5 +1,5 @@
 # Single_Colony_Project
-Analysis scripts for this project
+
 Please see other scripts in previous projects:
 
 https://github.com/swisstph/TBRU_serialTB
