@@ -3,52 +3,38 @@
 #include<stdlib.h>
 #include<math.h>
 
-typedef struct
-{
-	int mutation_label;
-	int mutation_numbers;
-}CELL;
-
-typedef struct
-{
-	int label;
-	int number;
-	float rate;
-}MUTATION;
-
 int main()
 {
-	CELL cell1[110000000] = {0}, cell2[110000000] = {0};
-	//MUTATION mutation[6000000] = {0};
-	int cells, mutations, i, j, k, p, q, r, m, n, a, b, c, sample_cell[1001], mutation_number[21] = {0};
-	float theory;
-	float s, t;
-	float generations;
-	int stochastic = 10000;
-	int mu_rate = 8;
-	int up_cells = 100000000;
-	int samples = 1000;
-	float SNVs = 1.19;    /*Input the expected SNVs*/
+	int cells, mutations, i, j, k, p, r, a, b, c, sample_cell[1001];
+	int cell1[110000000] = {0}, cell2[110000000] = {0};   /*Record the mutation number of each cell*/
+	float expected_number;							      /*The expected cell number in each generation*/
+	float decimal;										  /*The actual cell number is the round expected cell number*/
+	float exponential_parameter;						  /*The parameter of the exponential growth*/
+	float expected_generations;							  /*The expected total generations of cell growth*/
+	int stochastic = 10000, mu_rate = 8;				  /*The total mutation rate is mu_rate/stochastic=0.0008*/
+	int up_cells = 100000000;							  /*The total cell number*/
+	int samples = 50;									  /*The number of sampling cells*/
+	float SNVs = 3;										  /*The expected mean mutation number per cell when sampling*/
 	FILE *fp;
 	srand((unsigned)time(NULL));
 
-	/*cell growth*/
+	/*The growth of TB*/
 	cells = 1;
-	theory = 1.0;
+	expected_number = 1.0;
 	mutations = 0;
-	generations = SNVs / 0.0008;
-	t = log((float)up_cells);
-	s = t / generations;
-	fp = fopen("cell number.txt","w+");
-	for(i = 1; i <= generations; i++)
+	expected_generations = SNVs / 0.0008;
+	exponential_parameter = log((float)up_cells) / expected_generations;
+    fp = fopen("cell number.txt","w+");
+	fprintf(fp, "generations\tcell_number\tmutation_number\n");
+	for(i = 1; i <= expected_generations; i++)
 	{
 		k = cells;
-		theory = theory * exp((float)s);
-		t = theory - (int) theory;
-		if(t < 0.5)
-			cells = theory;
+		expected_number = expected_number * exp((float)exponential_parameter);
+		decimal = expected_number - (int)expected_number;
+		if(decimal < 0.5)
+			cells = expected_number;
 		else
-			cells = theory + 1;
+			cells = expected_number + 1;
 		for(j = 1; j <= cells; j++)
 		{
 			while(1)
@@ -66,30 +52,25 @@ int main()
 			if(p < mu_rate)
 			{
 				mutations++;
-				//mutation[mutations].label = cell1[r].mutation_label;
-				//cell2[j].mutation_label = mutations;
-				cell2[j].mutation_numbers = cell1[r].mutation_numbers + 1;
+				cell2[j] = cell1[r] + 1;
 			}
 			else
-			{
-				//cell2[j].mutation_label = cell1[r].mutation_label;
-				cell2[j].mutation_numbers = cell1[r].mutation_numbers;
-			}
+				cell2[j] = cell1[r];
 		}
 		fprintf(fp, "%d\t%d\t%d\n", i, cells, mutations);
 		if(cells > up_cells)
 			break;
 		for(j = 1; j <= cells; j++)
-		{
-			//cell1[j].mutation_label = cell2[j].mutation_label;
-			cell1[j].mutation_numbers = cell2[j].mutation_numbers;
-		}
+			cell1[j] = cell2[j];
 	}
+	fclose(fp);
 
 
 
-	/*random sampling*/
-	fp = fopen("random choose.txt", "w+");
+
+	/*Random Sampling*/
+	fp = fopen("random sampling.txt", "w+");
+	fprintf(fp, "numbers\tcell_label\tmutation_number\n");
 	for(i = 1; i <= samples; i++)
 	{
 		while(1)
@@ -104,10 +85,10 @@ int main()
 				break;
 		}
 		sample_cell[i] = r;
-		fprintf(fp, "%d\t%d\t%d\n", i, r, cell2[r].mutation_numbers);
+		fprintf(fp, "%d\t%d\t%d\n", i, r, cell2[r]);
 	}
-
-
-
 	fclose(fp);
+
+	return 0;
+	
 }
